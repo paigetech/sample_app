@@ -65,6 +65,20 @@ describe "AuthenticationPages" do
             it "should render the desired protected page" do
               expect(page).to have_title('Edit user')
             end
+
+            describe "when signing in again" do
+              before do
+                click_link "Sign out"
+                visit signin_path
+                fill_in "Email", with: user.email
+                fill_in "Password", with: user.password
+                click_button "Sign in"
+              end
+
+              it "should render the default (profile) page" do
+                expect(page).to have_title(user.name)
+              end
+            end
           end
         end
         describe "in the Users controller" do
@@ -98,6 +112,17 @@ describe "AuthenticationPages" do
 
           describe "submitting a PATCH request to the Users#update action" do
             before { patch user_path(wrong_user) }
+            specify { expect(response).to redirect_to(root_url) }
+          end
+        end
+
+        describe "as a non-admin user" do
+          let(:user) { FactoryGirl.create(:user) }
+          let(:non_admin) { FactoryGirl.create(:user) }
+          before { sign_in non_admin, no_capybara: true }
+
+          describe "submidding a DELETE request to the Users#destroy action" do
+            before { delete user_path(user) }
             specify { expect(response).to redirect_to(root_url) }
           end
         end
